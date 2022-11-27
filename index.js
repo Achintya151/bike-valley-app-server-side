@@ -17,6 +17,8 @@ const run = async () => {
     try {
         const bikesCollection = client.db('bikeValley').collection('bikes');
         const bikeCategoriesCollection = client.db('bikeValley').collection('bikeCategories');
+        const bookingCollection = client.db('bikeValley').collection('booking');
+
 
         app.get('/bikes', async (req, res) => {
             const query = {};
@@ -36,6 +38,25 @@ const run = async () => {
             const query = {}
             const cursor = await bikeCategoriesCollection.find(query).toArray();
             res.send(cursor);
+        })
+
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            const query = {
+                buyerName: booking.buyerName,
+                email: booking.email,
+                itemId: booking.itemId
+            }
+
+            const alreadyBooked = await bookingCollection.find(query).toArray();
+
+            if (alreadyBooked.length) {
+                const message = `You have already booked ${booking.itemName}`
+                return res.send({ acknowledged: false, message })
+            }
+
+            const result = await bookingCollection.insertOne(booking);
+            res.send(result);
         })
     }
     finally {
