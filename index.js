@@ -34,6 +34,12 @@ const run = async () => {
             res.send(cursor);
         })
 
+        app.post('/bikes', async (req, res) => {
+            const product = req.body;
+            const result = await bikesCollection.insertOne(product);
+            res.send(result);
+        })
+
         app.get('/bikecategories', async (req, res) => {
             const query = {}
             const cursor = await bikeCategoriesCollection.find(query).toArray();
