@@ -47,6 +47,13 @@ const run = async () => {
             res.send(cursor);
         })
 
+        app.get('/bookings', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const booking = await bookingCollection.find(query).toArray();
+            res.send(booking);
+        })
+
         app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const query = {
@@ -66,15 +73,38 @@ const run = async () => {
             res.send(result);
         })
 
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const users = await usersCollection.findOne(query);
+            res.send({ users })
+        })
+
         app.get('/users', async (req, res) => {
             const role = req.query.role;
-            const query = { role: role };
-            const users = await usersCollection.find(query).toArray();
+            const roleQuery = { role: role };
+            const users = await usersCollection.find(roleQuery).toArray();
             res.send(users)
+        })
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            res.send({ isAdmin: user?.role === 'admin' })
         })
 
         app.post('/users', async (req, res) => {
             const user = req.body;
+            const query = {
+                email: user.email
+            }
+            const alreadyAdded = await usersCollection.find(query).toArray();
+
+            if (alreadyAdded.length) {
+                return res.send({ acknowledged: false })
+            }
+
             const result = await usersCollection.insertOne(user);
             res.send(result);
         })
@@ -90,6 +120,13 @@ const run = async () => {
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, option);
             res.send(result)
+        })
+
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const result = await usersCollection.deleteOne(filter)
+            res.send(result);
         })
     }
     finally {
