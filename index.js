@@ -27,6 +27,12 @@ const run = async () => {
             res.send(categories);
         })
 
+        app.get('/bikes/advertised', async (req, res) => {
+            const query = { isAdvertised: true }
+            const bikes = await bikesCollection.find(query).toArray();
+            res.send(bikes);
+        })
+
         app.get('/bikes/:category', async (req, res) => {
             const category = req.params.category;
             console.log(category);
@@ -38,6 +44,19 @@ const run = async () => {
         app.post('/bikes', async (req, res) => {
             const product = req.body;
             const result = await bikesCollection.insertOne(product);
+            res.send(result);
+        })
+
+        app.put('/bikes/advertised/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    isAdvertised: true
+                }
+            }
+            const result = await bikesCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         })
 
