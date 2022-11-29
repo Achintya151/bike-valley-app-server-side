@@ -13,6 +13,7 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.8xqwoju.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
 const run = async () => {
     try {
         const bikesCollection = client.db('bikeValley').collection('bikes');
@@ -27,6 +28,13 @@ const run = async () => {
             res.send(categories);
         })
 
+        app.get('/bikesbyemail/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { sellerEmail: email };
+            const bikes = await bikesCollection.find(query).toArray();
+            res.send(bikes);
+        })
+
         app.get('/bikes/advertised', async (req, res) => {
             const query = { isAdvertised: true }
             const bikes = await bikesCollection.find(query).toArray();
@@ -35,7 +43,6 @@ const run = async () => {
 
         app.get('/bikes/:category', async (req, res) => {
             const category = req.params.category;
-            console.log(category);
             const query = { category: category };
             const cursor = await bikesCollection.find(query).toArray();
             res.send(cursor);
@@ -92,18 +99,25 @@ const run = async () => {
             res.send(result);
         })
 
-        app.get('/users/:email', async (req, res) => {
+        app.get('/usersbyemail/:email', async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const users = await usersCollection.findOne(query);
             res.send({ users })
         })
 
+        // app.get('/users', async (req, res) => {
+        //     const role = req.query.role;
+        //     const roleQuery = { role: role };
+        //     const users = await usersCollection.find(roleQuery).toArray();
+        //     res.send(users)
+        // })
+
         app.get('/users', async (req, res) => {
-            const role = req.query.role;
-            const roleQuery = { role: role };
-            const users = await usersCollection.find(roleQuery).toArray();
-            res.send(users)
+            const role = req.headers.role;
+            const query = { role: role };
+            const sellers = await usersCollection.find(query).toArray();
+            res.send(sellers)
         })
 
         app.get('/users/admin/:email', async (req, res) => {
@@ -139,6 +153,20 @@ const run = async () => {
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, option);
             res.send(result)
+        })
+
+        app.put('/users/verified/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email }
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    sellerVerified: true
+                }
+            }
+            const user = await usersCollection.updateOne(filter, updatedDoc, options)
+
+            res.send(user)
         })
 
         app.delete('/users/:id', async (req, res) => {
