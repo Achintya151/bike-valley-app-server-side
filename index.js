@@ -67,6 +67,13 @@ const run = async () => {
             res.send(result);
         })
 
+        app.delete('/bikes/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const result = await bikesCollection.deleteOne(filter)
+            res.send(result)
+        })
+
         app.get('/bikecategories', async (req, res) => {
             const query = {}
             const cursor = await bikeCategoriesCollection.find(query).toArray();
